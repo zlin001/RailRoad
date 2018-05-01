@@ -1,0 +1,5 @@
+## FOR MAC
+.DS_Store
+
+## FOR IDE
+__pycache__/
