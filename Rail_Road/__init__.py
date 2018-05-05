@@ -4,3 +4,6 @@ from flask import Flask
 app = Flask('Rail_Road')
 # getting routes
 from Rail_Road import routes
+from flask_bootstrap import Bootstrap
+
+Bootstrap(app)

@@ -1,5 +1,10 @@
-## FOR MAC
+# FOR MAC
 .DS_Store
 
-## FOR IDE
+# FOR IDE
 __pycache__/
+.idea
+.pyc
+
+# virtualenv
+.venv

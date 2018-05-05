@@ -1,7 +1,106 @@
 <!--If you want the layout sturcute for the page just add extends like below-->
 {% extends "layout.html" %}
 {% block content %}
-<h1>
-Welcome to homepage
-</h1>
+
+    <html lang="en">
+    <head>
+
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="description" content="">
+        <meta name="author" content="">
+
+        <title>Logo Nav - Start Bootstrap Template</title>
+
+        <!-- Bootstrap core CSS -->
+        <link href="{{ url_for('static', filename='themes/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+
+        <!-- Custom styles for this template -->
+        <link href="{{ url_for('static', filename='themes/css/logo-nav.css') }}" rel="stylesheet">
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+              integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+              crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/gijgo@1.9.6/js/gijgo.min.js" type="text/javascript"></script>
+        <link href="https://cdn.jsdelivr.net/npm/gijgo@1.9.6/css/gijgo.min.css" rel="stylesheet" type="text/css"/>
+
+    </head>
+
+    <body>
+    <!-- Page Content -->
+    <div class="container">
+        <h1>Railroad Reservation System</h1>
+        <br>
+
+        <form action="#" method="POST">
+            <div class="jumbotron">
+                <div class="row">
+                    <div class="input-group offset-1 col-md-10">
+                        <select id="start_station" name="start_station" class="form-control" required>
+                            <option>...</option>
+                            <option>...</option>
+                        </select>
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">To</span>
+                        </div>
+                        <select id="end_station" name="end_station" class="form-control" required>
+                            <option>...</option>
+                            <option>...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="row">
+                    <div class="input-group offset-1 col-md-3">
+                        <input type="text" id="datepicker" name="datepicker" placeholder="mm/dd/yyyy" required>
+                        <script>
+                            $('#datepicker').datepicker({
+                                uiLibrary: 'bootstrap4'
+                            });
+                        </script>
+                    </div>
+
+                    <div class="input-group col-md-4">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Session</span>
+                        </div>
+                        <select id="session" name="session" class="form-control" required>
+                            <option>Morning</option>
+                            <option>Afternoon</option>
+                            <option>Evening</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group col-md-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">Type</span>
+                        </div>
+                        <select id="ticket_type" name="ticket_type" class="form-control" required>
+                            <option>Adult</option>
+                            <option>Child</option>
+                            <option>Senior</option>
+                            <option>Military</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- redirect to search p
+            <button class="btn btn-primary offset-10 col-md-2" type="submit">Search</button>
+        </form>
+
+    </div>
+
+    <!-- /.container -->
+    <footer>
+        <div class="container" style="padding-top: 60px; margin-bottom: 0px"></div>
+    </footer>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="{{ url_for('static', filename='themes/vendor/jquery/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='themes/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    </body>
+    </html>
 {% endblock %}
