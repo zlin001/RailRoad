@@ -37,8 +37,41 @@ def cancel():
 
 
 # ---------------------- REGISTERED PASSENGER ----------------------#
-@app.route('/registration')
+@app.route('/registration', methods=['GET', 'POST'])
 def registration():
+    if request.method == 'POST':
+        if request.values.get('inputPd') == request.values.get('confirmPd'):
+            check_email = Passengers.query.filter_by(email=request.values.get('inputEmail')).first()
+            #flash("This is email is already used, please try another one")
+
+            fname = request.values.get('first_name')
+            lname = request.values.get('last_name')
+            email = request.values.get('inputEmail')
+            password = request.values.get('inputPd')
+            cardnum = request.values.get('cardnum')
+            addr1 = str(request.values.get('inputAddr'))
+            addr2 = str(request.values.get('inputAddr2'))
+            city = str(request.values.get('inputCity'))
+            state = str(request.values.get('inputState'))
+            zip = str(request.values.get('inputZip'))
+
+            if check_email is None:
+                billing_address = addr1 + (addr2 if addr2 == "" else (" " + addr2)) + ", " + city + ", " + state + ", " + zip
+
+                passenger = Passengers(fname=fname, lname=lname, email=email, preferred_card_number=cardnum,
+                                       preferred_billing_address=billing_address)
+
+                passenger.set_password(password=password)
+                db.session.add(passenger)
+                db.session.commit()
+
+                flash('Register successfully! You may login now.')
+
+                return redirect(url_for('login'))
+            else:
+                flash("The email address is used, please try another one.")
+        else:
+            flash("Password does not match, please enter again.")
     return render_template("registration.html")
 
 
