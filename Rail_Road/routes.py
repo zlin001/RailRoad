@@ -1,21 +1,75 @@
-from flask import Flask, render_template, request, redirect, url_for
-from . import app
+from flask import Flask, render_template, request, redirect, url_for, flash
+from . import app, db
+from flask_login import login_manager, current_user, login_user, logout_user, login_required
+from Rail_Road.models import Passengers
 
-# This is exampel for how to make a route for different page
+
+# This is example for how to make a route for different page
 @app.route('/')
+# redirect to results page after search button is clicked at index page
 @app.route('/index')
 def index():
     return render_template("index.html")
 
-# redirect to results page after search button is clicked at index page
+
+# redirect to checkout page after reserve button is clicked at results page
 @app.route('/results')
 def results():
     return render_template("results.html")
 
-@app.route('/login')
-def login():
-    return render_template("login.html")
 
+# redirect to confirmation page after submit button is clicked at checkout page
+@app.route('/checkout')
+def checkout():
+    return render_template("checkout.html")
+
+
+# confirmation page returns the ticket info to user
+@app.route('/confirmation')
+def confirmation():
+    return render_template("confirmation.html")
+
+
+# cancel trip
+@app.route('/cancel')
+def cancel():
+    return render_template("cancel.html")
+
+
+# ---------------------- REGISTERED PASSENGER ----------------------#
 @app.route('/registration')
 def registration():
     return render_template("registration.html")
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        passenger = Passengers.query.filter_by(email=request.values.get('email')).first()
+        if passenger is None:
+            flash("No matched record, please check your email or password again.")
+        elif passenger is not None and passenger.check_password(request.values.get('password')):
+            login_user(passenger)
+            return redirect(url_for('index'))
+    return render_template("login.html")
+
+
+@app.route('/profile')
+@login_required
+def profile():
+    passenger = Passengers.query.filter_by(passenger_id=current_user.passenger_id).first()
+    return render_template("profile.html", passenger=passenger)
+
+
+# shows all tickets that the user has purchase
+@app.route('/history')
+def history():
+    return render_template("history.html")
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    flash("Logout successfully")
+    logout_user()
+    return redirect(url_for('index'))

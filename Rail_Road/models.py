@@ -1,6 +1,13 @@
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
-from Rail_Road import db
+from Rail_Road import db, login_manager
+
+
+# Set up user_loader
+@login_manager.user_loader
+def load_user(id):
+    return Passengers.query.get(int(id))
+
 
 class Passengers(db.Model, UserMixin):
     __tablename__ = 'passengers'
@@ -13,11 +20,14 @@ class Passengers(db.Model, UserMixin):
     preferred_card_number = db.Column(db.VARCHAR(16))
     preferred_billing_address = db.Column(db.VARCHAR(100))
 
+    def get_id(self):
+        return self.passenger_id
+
     def set_password(self, password):
         self.password = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+        return check_password_hash(self.password, password)
 
     def __repr__(self):
-        return '<Passenger: {}, {}, {}, {}>'.format(self.fname, self.lname, self.email, self.password)
+        return '<Passenger: {}, {}, {}>'.format(self.fname, self.lname, self.email)

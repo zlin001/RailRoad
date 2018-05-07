@@ -33,37 +33,49 @@
 
     <body>
     <!-- Page Content -->
-    <div class="container" style="min-height: 100vh">
-        <h1>Results from xxx to yyy</h1>
-        <br>
+    <div class="container" style="width: 850px; margin: auto">
+        <h1>Profile</h1>
 
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th>Select</th>
-                <th>Train ID</th>
-                <th>Departure Time</th>
-                <th>Arrival Time</th>
-                <th>Seats Left</th>
-                <th>Price</th>
-            </tr>
-            </thead>
+        <br><br>
 
-            <tbody>
-            <tr>
-                <td><input class="form-check-input" type="radio" name="select" id="select"></td>
-                <td>1</td>
-                <td>10:00</td>
-                <td>15:00</td>
-                <td>50</td>
-                <td>$$$</td>
-            </tr>
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table">
+                <thead class="thead-light">
+                <tr>
+                    <th>Passenger ID</th>
+                    <th>Firstname</th>
+                    <th>Lastname</th>
+                    <th>Email</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{{ passenger.passenger_id }}</td>
+                    <td>{{ passenger.fname }}</td>
+                    <td>{{ passenger.lname }}</td>
+                    <td>{{ passenger.email }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
-        <div class="options">
-            <a href="{{ url_for('index') }}" style="font-weight: bold">Go Back</a>
-            <button name="reserve" class="btn btn-primary" type="submit" aria-pressed="true" style="float: right">Reserve</button>
+        <br><br>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead class="thead-light">
+                <tr>
+                    <th>Preferred Card Number</th>
+                    <th>Preferred Billing Address</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{{ passenger.preferred_card_number }}</td>
+                    <td>{{ passenger.preferred_billing_address }}</td>
+                </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
