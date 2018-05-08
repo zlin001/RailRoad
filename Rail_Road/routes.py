@@ -56,7 +56,8 @@ def registration():
             zip = str(request.values.get('inputZip'))
 
             if check_email is None:
-                billing_address = addr1 + (addr2 if addr2 == "" else (" " + addr2)) + ", " + city + ", " + state + ", " + zip
+                billing_address = addr1 + (addr2 if addr2 == "" else (" " + addr2)) + ", " + city + ", " + \
+                                  state + ", " + zip
 
                 passenger = Passengers(fname=fname, lname=lname, email=email, preferred_card_number=cardnum,
                                        preferred_billing_address=billing_address)
@@ -80,10 +81,12 @@ def login():
     if request.method == 'POST':
         passenger = Passengers.query.filter_by(email=request.values.get('email')).first()
         if passenger is None:
-            flash("No matched record, please check your email or password again.")
+            flash("No matched record, please check your email.")
         elif passenger is not None and passenger.check_password(request.values.get('password')):
             login_user(passenger)
             return redirect(url_for('index'))
+        else:
+            flash("Password does not match, please check again")
     return render_template("login.html")
 
 
