@@ -20,6 +20,15 @@ class Passengers(db.Model, UserMixin):
     preferred_card_number = db.Column(db.VARCHAR(16))
     preferred_billing_address = db.Column(db.VARCHAR(100))
 
+class Reservations(db.Model):
+    __tablename__ = 'reservations'
+    
+    reservation_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    reservation_date = db.Column(db.datetime)
+    paying_passenger_id = db.Column(db.Integer,db.ForeignKey('passengers.passenger_id'))
+    card_number = db.Column(db.VARCHAR(16))
+    billing_address = db.Column(db.VARCHAR(100))
+    
     def get_id(self):
         return self.passenger_id
 
