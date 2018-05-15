@@ -2,7 +2,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from Rail_Road import db, login_manager
 
-
 # Set up user_loader
 @login_manager.user_loader
 def load_user(id):
@@ -24,7 +23,7 @@ class Reservations(db.Model):
     __tablename__ = 'reservations'
     
     reservation_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    reservation_date = db.Column(db.datetime)
+    reservation_date = db.Column(db.DateTime)
     paying_passenger_id = db.Column(db.Integer,db.ForeignKey('passengers.passenger_id'))
     card_number = db.Column(db.VARCHAR(16))
     billing_address = db.Column(db.VARCHAR(100))

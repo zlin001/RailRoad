@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from . import app, db
 from flask_login import login_manager, current_user, login_user, logout_user, login_required
 from Rail_Road.models import Passengers,Reservations
-
+import datetime
 
 # This is example for how to make a route for different page
 @app.route('/')
@@ -21,6 +21,8 @@ def results():
 # redirect to confirmation page after submit button is clicked at checkout page
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
+    now = datetime.datetime.now()
+
     if request.method == 'POST':
         fname=request.values.get('first_name')
         lname=request.values.get('last_name')
@@ -33,7 +35,7 @@ def checkout():
         user = Passengers.query.filter_by(fname=fname,lname=lname,preferred_card_number=cardnum).first()
         billing_address = addr1 + (addr2 if addr2 == "" else (" " + addr2)) + ", " + city + ", " + \
                           state + ", " + zip
-        date = '2018-05-18'
+        date = now.strftime("%Y-%m-%d %H:%M")
         reservation = Reservations(reservation_date = date, paying_passenger_id = user.passenger_id, card_number = cardnum, billing_address = billing_address)
         db.session.add(reservation)
         db.session.commit()
