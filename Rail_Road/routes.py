@@ -1,11 +1,29 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from . import app, db
 from flask_login import login_manager, current_user, login_user, logout_user, login_required
-from Rail_Road.models import Passengers,Reservations
+from Rail_Road.models import Passengers, Reservations
 import datetime
 
+
 # This is example for how to make a route for different page
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        passenger = Passengers.query.filter_by(email=request.values.get('email')).first()
+        if passenger is None:
+            flash("No matched record, please check your email.")
+        elif passenger is not None and passenger.check_password(request.values.get('password')):
+            login_user(passenger)
+            return redirect(url_for('index'))
+        else:
+            flash("Password does not match, please check again")
+            return redirect(url_for('login'))
+    else:
+        return render_template("login.html")
+
+
+
 # redirect to results page after search button is clicked at index page
 @app.route('/index')
 def index():
@@ -20,34 +38,41 @@ def results():
 
 # redirect to confirmation page after submit button is clicked at checkout page
 @app.route('/checkout', methods=['GET', 'POST'])
+@login_required
 def checkout():
+    passenger = Passengers.query.filter_by(passenger_id=current_user.passenger_id).first()
     now = datetime.datetime.now()
 
     if request.method == 'POST':
-        fname=request.values.get('first_name')
-        lname=request.values.get('last_name')
-        cardnum=request.values.get('cardnum')
+        fname = request.values.get('first_name')
+        lname = request.values.get('last_name')
+        cardnum = request.values.get('cardnum')
         addr1 = str(request.values.get('inputAddr'))
         addr2 = str(request.values.get('inputAddr2'))
         city = str(request.values.get('inputCity'))
         state = str(request.values.get('inputState'))
         zip = str(request.values.get('inputZip'))
-        user = Passengers.query.filter_by(fname=fname,lname=lname,preferred_card_number=cardnum).first()
+        user = current_user.passenger_id
         billing_address = addr1 + (addr2 if addr2 == "" else (" " + addr2)) + ", " + city + ", " + \
                           state + ", " + zip
         date = now.strftime("%Y-%m-%d %H:%M")
-        reservation = Reservations(reservation_date = date, paying_passenger_id = user.passenger_id, card_number = cardnum, billing_address = billing_address)
+        reservation = Reservations(reservation_date=date, paying_passenger_id=user, card_number=cardnum,
+                                   billing_address=billing_address)
         db.session.add(reservation)
         db.session.commit()
-        flash('Reservation Made!')
 
-    return render_template("checkout.html")
+        flash('Reservation Made!')
+        return render_template("confirmation.html", reservation_id=reservation.reservation_id)
+
+    return render_template("checkout.html", passenger=passenger)
 
 
 # confirmation page returns the ticket info to user
-@app.route('/confirmation')
-def confirmation():
-    return render_template("confirmation.html")
+@app.route('/confirmation/<reservation_id>')
+@login_required
+def confirmation(reservation_id):
+    #reservation = Reservations.query.filter_by(reservation_id=reservation_id).first
+    return render_template("confirmation.html", reservation_id=reservation_id)
 
 
 # cancel trip
@@ -62,7 +87,7 @@ def registration():
     if request.method == 'POST':
         if request.values.get('inputPd') == request.values.get('confirmPd'):
             check_email = Passengers.query.filter_by(email=request.values.get('inputEmail')).first()
-            #flash("This is email is already used, please try another one")
+            # flash("This is email is already used, please try another one")
 
             fname = request.values.get('first_name')
             lname = request.values.get('last_name')
@@ -96,20 +121,6 @@ def registration():
     return render_template("registration.html")
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        passenger = Passengers.query.filter_by(email=request.values.get('email')).first()
-        if passenger is None:
-            flash("No matched record, please check your email.")
-        elif passenger is not None and passenger.check_password(request.values.get('password')):
-            login_user(passenger)
-            return redirect(url_for('index'))
-        else:
-            flash("Password does not match, please check again")
-    return render_template("login.html")
-
-
 @app.route('/profile')
 @login_required
 def profile():
@@ -128,4 +139,4 @@ def history():
 def logout():
     flash("Logout successfully")
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
