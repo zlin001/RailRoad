@@ -21,13 +21,13 @@ class Passengers(db.Model, UserMixin):
 
 class Reservations(db.Model):
     __tablename__ = 'reservations'
-    
+
     reservation_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     reservation_date = db.Column(db.DateTime)
     paying_passenger_id = db.Column(db.Integer,db.ForeignKey('passengers.passenger_id'))
     card_number = db.Column(db.VARCHAR(16))
     billing_address = db.Column(db.VARCHAR(100))
-    
+
     def get_id(self):
         return self.passenger_id
 
@@ -39,3 +39,16 @@ class Reservations(db.Model):
 
     def __repr__(self):
         return '<Passenger: {}, {}, {}>'.format(self.fname, self.lname, self.email)
+
+class Fare_types(db.Model):
+    __tablename__ = 'fare_types'
+
+    fare_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    fare_name = db.Column(db.VARCHAR(20))
+    rate = db.Column(db.Float)
+
+    def get_id(self):
+        return self.fare_id_id
+
+    def __repr__(self):
+        return '<Fare_types: {}, {}, {}>'.format(self.fare_name, self.rate)
