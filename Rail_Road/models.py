@@ -51,4 +51,4 @@ class Fare_types(db.Model):
         return self.fare_id_id
 
     def __repr__(self):
-        return '<Fare_types: {}, {}, {}>'.format(self.fare_name, self.rate)
+        return '<Fare_types: {}, {}>'.format(self.fare_name, self.rate)
