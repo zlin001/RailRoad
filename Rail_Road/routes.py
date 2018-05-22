@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from . import app, db
 from flask_login import login_manager, current_user, login_user, logout_user, login_required
-from Rail_Road.models import Passengers, Reservations
+from Rail_Road.models import Passengers, Reservations,Fare_types
 import datetime
 
 
@@ -25,14 +25,25 @@ def login():
 
 
 # redirect to results page after search button is clicked at index page
-@app.route('/index')
+@app.route('/index',methods=['GET','POST'])
 def index():
-    return render_template("index.html")
+    if request.method == 'POST':
+        #session['session'] = session
+        #session['date'] = date
+        #session['type'] = type
+        return redirect(url_for('results'))
+    else:
+        return render_template("index.html")
 
 
 # redirect to checkout page after reserve button is clicked at results page
-@app.route('/results')
+@app.route('/results',methods=['GET','POST'])
 def results():
+    session = request.form.get("session")
+    date = request.form.get("datepicker")
+    type = request.form.get("ticket_type")
+    start_station = request.form.get("start_station")
+    end_station = request.form.get("end_station")
     return render_template("results.html")
 
 

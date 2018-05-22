@@ -18,7 +18,7 @@ class Passengers(db.Model, UserMixin):
     password = db.Column(db.VARCHAR(100))
     preferred_card_number = db.Column(db.VARCHAR(16))
     preferred_billing_address = db.Column(db.VARCHAR(100))
-    
+
     def get_id(self):
         return self.passenger_id
 
@@ -39,7 +39,7 @@ class Reservations(db.Model):
     paying_passenger_id = db.Column(db.Integer,db.ForeignKey('passengers.passenger_id'))
     card_number = db.Column(db.VARCHAR(16))
     billing_address = db.Column(db.VARCHAR(100))
-    
+
     def __repr__(self):
         return '<Passenger: {}, {}>'.format(self.reservation_id, self.reservation_date)
 
@@ -50,6 +50,15 @@ class Fare_types(db.Model):
     fare_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     fare_name = db.Column(db.VARCHAR(20))
     rate = db.Column(db.Float)
+
+    def __repr__(self):
+        return '<Fare_types: {}, {}>'.format(self.fare_name, self.rate)
+class Station(db.Model):
+    __tablename__ = 'stations'
+
+    station_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    station_name = db.Column(db.VARCHAR(20))
+    station_symbol = db.Column(db.Float)
 
     def __repr__(self):
         return '<Fare_types: {}, {}>'.format(self.fare_name, self.rate)
