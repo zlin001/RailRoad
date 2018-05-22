@@ -53,12 +53,13 @@ class Fare_types(db.Model):
 
     def __repr__(self):
         return '<Fare_types: {}, {}>'.format(self.fare_name, self.rate)
+
 class Station(db.Model):
     __tablename__ = 'stations'
 
     station_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    station_name = db.Column(db.VARCHAR(20))
-    station_symbol = db.Column(db.Float)
+    station_name = db.Column(db.VARCHAR(40))
+    station_symbol = db.Column(db.CHAR(3))
 
     def __repr__(self):
-        return '<Fare_types: {}, {}>'.format(self.fare_name, self.rate)
+        return '<Station: {}, {}>'.format(self.station_id , self.station_name)

@@ -37,15 +37,19 @@
                 <div class="row">
                     <div class="input-group offset-1 col-md-10">
                         <select id="start_station" name="start_station" class="form-control" required>
-                            <option>...</option>
-                            <option>...</option>
+                        <option selected>Origin</option>
+                            {% for station in stations %}
+                                <option>{{ station.station_name }}</option>
+                            {% endfor %}
                         </select>
                         <div class="input-group-prepend">
                             <span class="input-group-text">To</span>
                         </div>
                         <select id="end_station" name="end_station" class="form-control" required>
-                            <option>...</option>
-                            <option>...</option>
+                        <option selected>Destination</option>
+                            {% for station in stations %}
+                                <option>{{ station.station_name }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                 </div>
