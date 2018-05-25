@@ -32,7 +32,7 @@
     </head>
 
     <body>
-    <form action="checkout" method="GET">
+    <form action="" method="POST">
     <!-- Page Content -->
     <div class="container" style="min-height: 100vh">
         <h2>Results from {{start_station}} to {{end_station}} on {{date}}</h2>
@@ -53,11 +53,11 @@
             <tbody>
             {% for information in result%}
             <tr>
-                <td><input class="form-check-input" type="radio" name="select" id="select" value=1></td>
+                <td><input class="form-check-input" type="radio" name="select" id="select" value={{information["train_no"]}}></td>
                 <td>{{information["train_no"]}}</td>
                 <td>{{information["depature time"]}}</td>
                 <td>{{information["arrival time"]}}</td>
-                <td>unknown</td>
+                <td>{{information["seat_number"]}}</td>
                 <td>{{information["price"]}}</td>
             </tr>
             {% endfor %}
