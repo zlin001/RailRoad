@@ -1,9 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from . import app, db
 from flask_login import login_manager, current_user, login_user, logout_user, login_required
-from Rail_Road.models import Passengers, Reservations,Fare_types, Station
-import datetime
-
+from Rail_Road.models import Passengers, Reservations,Fare_types, Station, Segments, Trains, Seats_free, Stops_at, Trips
+from datetime import datetime, date, time
 
 # This is example for how to make a route for different page
 @app.route('/', methods=['GET', 'POST'])
@@ -26,6 +25,7 @@ def login():
 
 # redirect to results page after search button is clicked at index page
 @app.route('/index',methods=['GET','POST'])
+@login_required
 def index():
     stations = Station.query.all()
 
@@ -40,13 +40,84 @@ def index():
 
 # redirect to checkout page after reserve button is clicked at results page
 @app.route('/results',methods=['GET','POST'])
+@login_required
 def results():
-    session = request.form.get("session")
-    date = request.form.get("datepicker")
-    type = request.form.get("ticket_type")
-    start_station = request.form.get("start_station")
-    end_station = request.form.get("end_station")
-    return render_template("results.html")
+    result = []
+    session_input = request.form.get("session")
+    date_input = request.form.get("datepicker")
+    type_input = request.form.get("ticket_type")
+    start_station_input = request.form.get("start_station")
+    end_station_input = request.form.get("end_station")
+    pet_input = request.form.get("pet")
+    start_station = Station.query.filter_by(station_name=start_station_input).first()
+    end_station = Station.query.filter_by(station_name=end_station_input).first()
+    sum = 0
+    if start_station == None or end_station == None:
+        return render_template("results.html",start_station=start_station_input,end_station=end_station_input,date=date_input,result=result)
+    if start_station.get_id() == end_station.get_id():
+        return render_template("results.html",start_station=start_station.get_symbol(),end_station=end_station.get_symbol(),date=date_input,result=result)
+    if start_station.get_id() > end_station.get_id():
+        train_direction = 1
+        start_segment = Segments.query.filter_by(seg_s_end = start_station.get_id()).first()
+        end_segment = Segments.query.filter_by(seg_n_end = end_station.get_id()).first()
+        difference_id = start_station.get_id() - end_station.get_id()
+        for i in range(difference_id):
+            sum += Segments.query.filter_by(seg_n_end = i + end_station.get_id()).first().get_seg_fare()
+    else:
+        train_direction = 0
+        start_segment = Segments.query.filter_by(seg_n_end = start_station.get_id()).first()
+        end_segment = Segments.query.filter_by(seg_s_end = end_station.get_id()).first()
+        difference_id = end_station.get_id() - start_station.get_id()
+        for i in range(difference_id):
+            sum += Segments.query.filter_by(seg_n_end = i + start_station.get_id()).first().get_seg_fare()
+    rate = 0
+    if pet_input == "pet":
+        rate = Fare_types.query.filter_by(fare_name = type_input).first().get_rate() + Fare_types.query.filter_by(fare_name = "pets").first().get_rate()
+    else:
+        rate = Fare_types.query.filter_by(fare_name = type_input).first().get_rate()
+    # print(rate)
+    #print(sum)
+    total = rate * sum
+    # print(start_segment.get_id())
+    # print(end_segment.get_id())
+    if session_input == "morning":
+        start_time = datetime.strptime(date_input + " 06:00:00", "%m/%d/%Y %H:%M:%S")
+        end_time = datetime.strptime(date_input + " 12:00:00", "%m/%d/%Y %H:%M:%S")
+    elif session_input == "afternoon":
+        start_time = datetime.strptime(date_input + " 12:00:01", "%m/%d/%Y %H:%M:%S")
+        end_time = datetime.strptime(date_input + " 17:00:00", "%m/%d/%Y %H:%M:%S")
+    else:
+        start_time = datetime.strptime(date_input + " 17:00:01", "%m/%d/%Y %H:%M:%S")
+        end_time = datetime.strptime(date_input + " 05:59:59", "%m/%d/%Y %H:%M:%S")
+    current_datetime = datetime.now()
+    if start_time < current_datetime:
+        return render_template("results.html",start_station=start_station.get_symbol(),end_station=end_station.get_symbol(),date=date_input,result=result)
+    start_stops_at = Stops_at.query.filter(Stops_at.time_in >= start_time.time(), Stops_at.time_in <= end_time.time(), Stops_at.station_id == start_station.get_id()).all()
+    meet_date_list = {}
+    for data in start_stops_at:
+        meet_date_train = Seats_free.query.filter_by(train_id = data.get_train_id(),seat_free_date = start_time.date()).all()
+        if len(meet_date_train) != 0:
+            meet_date_list[data.get_train_id()] = Seats_free.query.filter_by(train_id = data.get_train_id(),segment_id=start_segment.get_id(),seat_free_date = start_time.date()).all()
+    direction_train_list = []
+    for key in meet_date_list:
+        if Trains.query.filter_by(train_id=key,train_direction=train_direction).first() != None:
+            direction_train_list.append(key)
+    print(direction_train_list)
+    information = {}
+    for i in range(len(direction_train_list)):
+        information["train_no"] = direction_train_list[i]
+        if train_direction == 0:
+            information["depature time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=start_station.get_id()).first().get_time_in().strftime('%H:%M:%S')
+            information["arrival time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=end_station.get_id()).first().get_time_out().strftime('%H:%M:%S')
+        else:
+            information["depature time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=end_station.get_id()).first().get_time_in().strftime('%H:%M:%S')
+            information["arrival time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=start_station.get_id()).first().get_time_out().strftime('%H:%M:%S')
+        information["price"] = total
+        information["fare_type"] = type_input
+        information["trip_seg_start"] = start_segment.get_id()
+        information["trip_seg_ends"] = end_segment.get_id()
+        result.append(information.copy())
+    return render_template("results.html",start_station=start_station.get_symbol(),end_station=end_station.get_symbol(),date=date_input,result=result)
 
 
 # redirect to confirmation page after submit button is clicked at checkout page
@@ -54,8 +125,7 @@ def results():
 @login_required
 def checkout():
     passenger = Passengers.query.filter_by(passenger_id=current_user.passenger_id).first()
-    now = datetime.datetime.now()
-
+    now = datetime.now()
     if request.method == 'POST':
         fname = request.values.get('first_name')
         lname = request.values.get('last_name')
