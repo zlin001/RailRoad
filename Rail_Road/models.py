@@ -119,7 +119,8 @@ class Seats_free(db.Model):
 
     def get_segment_id(self):
         return self.segment_id
-
+    def get_freeseat(self):
+        return self.freeseat
     def __repr__(self):
         return '<Seats_free: {}, {}, {}, {}>'.format(self.train_id , self.segment_id, self.seat_free_date, self.freeseat)
 
