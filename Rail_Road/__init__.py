@@ -27,7 +27,7 @@ db = SQLAlchemy(app)
 app.config.update(dict(SECRET_KEY="*&%$xs13#^"))
 
 from Rail_Road import routes, models
-from Rail_Road.models import Passengers
+from Rail_Road.models import Passengers,Reservations
 
 # test db
 # passenger = Passengers(fname="aaa", lname="bbb", email="aaa@example.com", preferred_card_number="123456789",

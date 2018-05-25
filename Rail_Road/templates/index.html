@@ -32,20 +32,24 @@
         <h1>Railroad Reservation System</h1>
         <br>
 
-        <form action="#" method="POST">
+        <form action="/results" method="GET">
             <div class="jumbotron">
                 <div class="row">
                     <div class="input-group offset-1 col-md-10">
                         <select id="start_station" name="start_station" class="form-control" required>
-                            <option>...</option>
-                            <option>...</option>
+                        <option selected>Origin</option>
+                            {% for station in stations %}
+                                <option>{{ station.station_name }}</option>
+                            {% endfor %}
                         </select>
                         <div class="input-group-prepend">
                             <span class="input-group-text">To</span>
                         </div>
                         <select id="end_station" name="end_station" class="form-control" required>
-                            <option>...</option>
-                            <option>...</option>
+                        <option selected>Destination</option>
+                            {% for station in stations %}
+                                <option>{{ station.station_name }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                 </div>
@@ -67,9 +71,9 @@
                             <span class="input-group-text">Session</span>
                         </div>
                         <select id="session" name="session" class="form-control" required>
-                            <option>Morning</option>
-                            <option>Afternoon</option>
-                            <option>Evening</option>
+                            <option value="morning">Morning</option>
+                            <option value="afternoon">Afternoon</option>
+                            <option value="evening">Evening</option>
                         </select>
                     </div>
 
@@ -86,7 +90,7 @@
                     </div>
 
                     <div class="form-check" style="padding-left: 40px; padding-top: 7px">
-                        <input class="form-check-input" type="checkbox" value="" id="pet" name="pet">
+                        <input class="form-check-input" type="checkbox" value="pet" id="pet" name="pet">
                         <label class="form-check-label" for="pet">Pet</label>
                     </div>
                 </div>

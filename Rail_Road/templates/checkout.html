@@ -37,17 +37,17 @@
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="first_name">First Name</label>
-                        <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        <input type="text" class="form-control" id="first_name" name="first_name" value="{{ passenger.fname }}" required>
                     </div>
                     <div class="form-group col-md-6">
                         <label for="last_name">Last Name</label>
-                        <input type="text" class="form-control" id="last_name" name="last_name" required>
+                        <input type="text" class="form-control" id="last_name" name="last_name" value="{{ passenger.lname }}" required>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="cardnum">Card Number</label>
-                    <input type="text" class="form-control" id="cardnum" name="cardnum" required>
+                    <input type="text" class="form-control" id="cardnum" name="cardnum" value="{{ passenger.preferred_card_number }}" required>
                 </div>
 
 
@@ -67,7 +67,7 @@
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="inputCity">City</label>
-                        <input type="text" class="form-control" id="inputCity" required>
+                        <input type="text" class="form-control" id="inputCity" name="inputCity" required>
                     </div>
                     <div class="form-group col-md-4">
                         <label for="inputState">State</label>
@@ -127,7 +127,7 @@
                     </div>
                     <div class="form-group col-md-2">
                         <label for="inputZip">Zip</label>
-                        <input type="text" class="form-control" id="inputZip" name="inputState" required>
+                        <input type="text" class="form-control" id="inputZip" name="inputZip" required>
                     </div>
                 </div>
 
