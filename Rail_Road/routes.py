@@ -88,8 +88,11 @@ def results():
     elif session_input == "afternoon":
         start_time = datetime.strptime(date_input + " 12:00:01", "%m/%d/%Y %H:%M:%S")
         end_time = datetime.strptime(date_input + " 17:00:00", "%m/%d/%Y %H:%M:%S")
-    else:
+    elif session_input == "evening":
         start_time = datetime.strptime(date_input + " 17:00:01", "%m/%d/%Y %H:%M:%S")
+        end_time = datetime.strptime(date_input + " 23:59:59", "%m/%d/%Y %H:%M:%S")
+    else:
+        start_time = datetime.strptime(date_input + " 00:00:00", "%m/%d/%Y %H:%M:%S")
         end_time = datetime.strptime(date_input + " 05:59:59", "%m/%d/%Y %H:%M:%S")
     if start_time < current_datetime:
         return render_template("results.html",start_station=start_station.get_symbol(),end_station=end_station.get_symbol(),date=date_input,result=result)
@@ -140,10 +143,10 @@ def results():
         information["train_no"] = direction_train_list[i]
         if train_direction == 0:
             information["depature time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=start_station.get_id()).first().get_time_in().strftime('%H:%M:%S')
-            information["arrival time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=end_station.get_id()).first().get_time_out().strftime('%H:%M:%S')
+            information["arrival time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=end_station.get_id()).first().get_time_in().strftime('%H:%M:%S')
         else:
             information["depature time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=end_station.get_id()).first().get_time_in().strftime('%H:%M:%S')
-            information["arrival time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=start_station.get_id()).first().get_time_out().strftime('%H:%M:%S')
+            information["arrival time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=start_station.get_id()).first().get_time_in().strftime('%H:%M:%S')
         information["price"] = total
         information["seat_number"] = seat_number[i]
         information["fare_type"] = type_input
