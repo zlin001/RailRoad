@@ -53,7 +53,7 @@
             <tbody>
             {% for information in result%}
             <tr>
-                <td><input class="form-check-input" type="radio" name="select" id="select" value={{information["train_no"]}}></td>
+                <td><input class="form-check-input" type="radio" name="{{ information["train_no"] }}" id="select" value={{information["train_no"]}}></td>
                 <td>{{information["train_no"]}}</td>
                 <td>{{information["depature time"]}}</td>
                 <td>{{information["arrival time"]}}</td>

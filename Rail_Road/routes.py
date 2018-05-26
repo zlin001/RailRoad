@@ -116,7 +116,7 @@ def results():
     information = {}
     train_list_with_seat = []
     seat_number = []
-    for i in range(len(direction_train_list)):
+    for x in range(len(direction_train_list)):
         smaller_seat = 448
         if train_direction == 0:
             for i in range(difference_id):
@@ -128,7 +128,7 @@ def results():
                 seat_number.append(smaller_seat)
                 train_list_with_seat.append(direction_train_list[i])
         else:
-            for i in range(difference_id):
+            for x in range(difference_id):
                 begin = Segments.query.filter_by(seg_n_end = i + end_station.get_id()).first().get_id()
                 freeseat_no = Seats_free.query.filter_by(train_id = direction_train_list[i], segment_id = begin,seat_free_date = start_time.date()).first().get_freeseat()
                 if freeseat_no <= smaller_seat:
@@ -155,7 +155,7 @@ def results():
     elif request.method == "POST":
         passenger = Passengers.query.filter_by(passenger_id=current_user.passenger_id).first()
         for information in result:
-          if information["train_no"] == int(request.form.get("select")):
+          if request.form.get(str(information["train_no"])) != None:
                 selected_information = information
         #print(selected_information)
         trip = Trips(trip_date = start_time.date(), trip_seg_start=selected_information["trip_seg_start"],trip_seg_ends = selected_information["trip_seg_ends"],fare_type = type.get_id(), fare = total, trip_train_id = selected_information["train_no"])
@@ -173,15 +173,16 @@ def results():
                 update_seat = Seats_free.query.filter_by(train_id = selected_information["train_no"],seat_free_date = start_time.date(),segment_id = begin).first()
                 update_seat.freeseat = update_seat.get_freeseat() - 1
                 db.session.commit()
-        return render_template("checkout.html",passenger=passenger)
+        return redirect(url_for('checkout', trip_id=trip.trip_id))
 
 
 
 # redirect to confirmation page after submit button is clicked at checkout page
-@app.route('/checkout', methods=['GET', 'POST'])
+@app.route('/checkout/<trip_id>', methods=['GET', 'POST'])
 @login_required
-def checkout():
+def checkout(trip_id):
     passenger = Passengers.query.filter_by(passenger_id=current_user.passenger_id).first()
+    trip = Trips.query.filter_by(trip_id=trip_id).first()
     now = datetime.now()
     if request.method == 'POST':
         fname = request.values.get('first_name')
@@ -201,18 +202,36 @@ def checkout():
         db.session.add(reservation)
         db.session.commit()
 
-        flash('Reservation Made!')
-        return render_template("confirmation.html", reservation_id=reservation.reservation_id)
+        trip.reservation_id = reservation.reservation_id
+        db.session.commit()
 
-    return render_template("checkout.html", passenger=passenger)
+        flash('Reservation Made!')
+        return redirect(url_for('confirmation', reservation_id=reservation.reservation_id))
+
+    return render_template("checkout.html", passenger=passenger, trip_id=trip_id)
 
 
 # confirmation page returns the ticket info to user
 @app.route('/confirmation/<reservation_id>')
 @login_required
 def confirmation(reservation_id):
-    #reservation = Reservations.query.filter_by(reservation_id=reservation_id).first
-    return render_template("confirmation.html", reservation_id=reservation_id)
+    trip = Trips.query.filter_by(reservation_id=reservation_id).first()
+    start_station = Station.query.filter_by(station_id=trip.trip_seg_start).first()
+    end_station = Station.query.filter_by(station_id=trip.trip_seg_ends).first()
+    trip_id = trip.trip_id
+    train_id = trip.trip_train_id
+    trip_date = trip.trip_date
+    departure = Stops_at.query.filter_by(train_id=trip.trip_train_id,station_id=trip.trip_seg_start).first()
+    arrival = Stops_at.query.filter_by(train_id=trip.trip_train_id,station_id=trip.trip_seg_ends).first()
+
+    departure_time = departure.time_in
+    arrival_time = arrival.time_out
+
+    fare = trip.fare
+
+    return render_template("confirmation.html", reservation_id=reservation_id, trip_id=trip_id, train_id=train_id,
+                           trip_date=trip_date, departure_time=departure_time, arrival_time=arrival_time,
+                           start_station=start_station, end_station=end_station, fare=fare)
 
 
 # cancel trip
