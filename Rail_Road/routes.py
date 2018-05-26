@@ -123,7 +123,7 @@ def results():
                 begin = Segments.query.filter_by(seg_n_end = x + start_station.get_id()).first().get_id()
                 freeseat_no = Seats_free.query.filter_by(train_id = direction_train_list[i], segment_id = begin,seat_free_date = start_time.date()).first().get_freeseat()
                 if freeseat_no <= smaller_seat:
-                    smaller = freeseat_no
+                    smaller_seat = freeseat_no
             if smaller_seat != 0:
                 seat_number.append(smaller_seat)
                 train_list_with_seat.append(direction_train_list[i])
@@ -132,7 +132,7 @@ def results():
                 begin = Segments.query.filter_by(seg_n_end = x + end_station.get_id()).first().get_id()
                 freeseat_no = Seats_free.query.filter_by(train_id = direction_train_list[i], segment_id = begin,seat_free_date = start_time.date()).first().get_freeseat()
                 if freeseat_no <= smaller_seat:
-                    smaller = freeseat_no
+                    smaller_seat = freeseat_no
             if smaller_seat != 0:
                 seat_number.append(smaller_seat)
                 train_list_with_seat.append(direction_train_list[i])
