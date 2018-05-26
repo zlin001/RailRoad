@@ -38,14 +38,14 @@
 
         <br>
 
-        <form action="#" method="POST">
+        <form action="/cancel" method="POST">
             <div class="form-row">
                 <div class="form-group offset-3 col-md-6">
                     <label for="inputId">Please Enter Your Reservation ID</label>
                     <div class="input-group">
                         <input type="text" class="form-control" id="inputId" name="inputId">
                         <div class="input-group-append">
-                            <button name="search" class="btn btn-primary" aria-pressed="true" type="submit">Search</button>
+                            <button name="action" value="search" class="btn btn-primary" type="submit">Search</button>
                         </div>
                     </div>
                 </div>
@@ -59,25 +59,35 @@
                     <tr>
                         <th>Trip ID</th>
                         <th>Train ID</th>
-                        <th>Trip Date</th>
                         <th>Departure Station</th>
                         <th>Arrival Station</th>
-                        <th>Fare Type</th>
+                        <th>Trip Date</th>
+                        <th>Departure Time</th>
+                        <th>Arrival Time</th>
                         <th>Price</th>
                         <th>Action</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr>
-                        <td>1</td>
-                        <td>20</td>
-                        <td>5/30/2018 14:30</td>
-                        <td>New York</td>
-                        <td>Boston</td>
-                        <td>Adult</td>
-                        <td>$50</td>
+                        <td>{{ trip_id }}</td>
+                        <td>{{ train_id }}</td>
+                        <td>{{ start_station }}</td>
+                        <td>{{ end_station }}</td>
+                        <td>{{ trip_date }}</td>
+                        <td>{{ departure_time }}</td>
+                        <td>{{ arrival_time }}</td>
+                        <td>{{ fare }}</td>
                         <td>
-                            <button name="cancel" class="btn btn-danger btn-sm" aria-pressed="true" type="submit">Cancel</button>
+                            {% if limit == 0 %}
+                                <button name="action" value="cancel" class="btn btn-danger btn-sm" type="submit"
+                                        disabled>Cancel
+                                </button>
+                            {% else %}
+                                <button name="action" value="cancel" class="btn btn-danger btn-sm" type="submit">
+                                    Cancel
+                                </button>
+                            {% endif %}
                         </td>
                     </tr>
                     </tbody>
