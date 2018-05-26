@@ -158,7 +158,7 @@ def results():
     elif request.method == "POST":
         passenger = Passengers.query.filter_by(passenger_id=current_user.passenger_id).first()
         for information in result:
-          if request.form.get(str(information["train_no"])) != None:
+            if information["train_no"] == int(request.form.get("select")):
                 selected_information = information
         #print(selected_information)
         trip = Trips(trip_date = start_time.date(), trip_seg_start=selected_information["trip_seg_start"],trip_seg_ends = selected_information["trip_seg_ends"],fare_type = type.get_id(), fare = total, trip_train_id = selected_information["train_no"])
