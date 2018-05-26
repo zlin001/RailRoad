@@ -55,34 +55,32 @@ def results():
     end_station = Station.query.filter_by(station_name=end_station_input).first()
     sum = 0
     if start_station == None or end_station == None:
-        return render_template("results.html", start_station=start_station_input, end_station=end_station_input,
-                               date=date_input, result=result)
+        return render_template("results.html",start_station=start_station_input,end_station=end_station_input,date=date_input,result=result)
     if start_station.get_id() == end_station.get_id():
-        return render_template("results.html", start_station=start_station.get_symbol(),
-                               end_station=end_station.get_symbol(), date=date_input, result=result)
+        return render_template("results.html",start_station=start_station.get_symbol(),end_station=end_station.get_symbol(),date=date_input,result=result)
     if start_station.get_id() > end_station.get_id():
         train_direction = 1
-        start_segment = Segments.query.filter_by(seg_s_end=start_station.get_id()).first()
-        end_segment = Segments.query.filter_by(seg_n_end=end_station.get_id()).first()
+        start_segment = Segments.query.filter_by(seg_s_end = start_station.get_id()).first()
+        end_segment = Segments.query.filter_by(seg_n_end = end_station.get_id()).first()
         difference_id = start_station.get_id() - end_station.get_id()
         for i in range(difference_id):
-            sum += Segments.query.filter_by(seg_n_end=i + end_station.get_id()).first().get_seg_fare()
+            sum += Segments.query.filter_by(seg_n_end = i + end_station.get_id()).first().get_seg_fare()
     else:
         train_direction = 0
-        start_segment = Segments.query.filter_by(seg_n_end=start_station.get_id()).first()
-        end_segment = Segments.query.filter_by(seg_s_end=end_station.get_id()).first()
+        start_segment = Segments.query.filter_by(seg_n_end = start_station.get_id()).first()
+        end_segment = Segments.query.filter_by(seg_s_end = end_station.get_id()).first()
         difference_id = end_station.get_id() - start_station.get_id()
         for i in range(difference_id):
-            sum += Segments.query.filter_by(seg_n_end=i + start_station.get_id()).first().get_seg_fare()
+            sum += Segments.query.filter_by(seg_n_end = i + start_station.get_id()).first().get_seg_fare()
     rate = 0
     if pet_input == "pet":
-        type = Fare_types.query.filter_by(fare_name=type_input).first()
-        rate = type.get_rate() + Fare_types.query.filter_by(fare_name="pets").first().get_rate()
+        type = Fare_types.query.filter_by(fare_name = type_input).first()
+        rate = type.get_rate() + Fare_types.query.filter_by(fare_name = "pets").first().get_rate()
     else:
-        type = Fare_types.query.filter_by(fare_name=type_input).first()
+        type = Fare_types.query.filter_by(fare_name = type_input).first()
         rate = type.get_rate()
     # print(rate)
-    # print(sum)
+    #print(sum)
     current_datetime = datetime.now()
     # print(start_segment.get_id())
     # print(end_segment.get_id())
@@ -92,77 +90,65 @@ def results():
     elif session_input == "afternoon":
         start_time = datetime.strptime(date_input + " 12:00:01", "%m/%d/%Y %H:%M:%S")
         end_time = datetime.strptime(date_input + " 17:00:00", "%m/%d/%Y %H:%M:%S")
-    else:
+    elif session_input == "evening":
         start_time = datetime.strptime(date_input + " 17:00:01", "%m/%d/%Y %H:%M:%S")
+        end_time = datetime.strptime(date_input + " 23:59:59", "%m/%d/%Y %H:%M:%S")
+    else:
+        start_time = datetime.strptime(date_input + " 00:00:00", "%m/%d/%Y %H:%M:%S")
         end_time = datetime.strptime(date_input + " 05:59:59", "%m/%d/%Y %H:%M:%S")
     if start_time < current_datetime:
-        return render_template("results.html", start_station=start_station.get_symbol(),
-                               end_station=end_station.get_symbol(), date=date_input, result=result)
+        return render_template("results.html",start_station=start_station.get_symbol(),end_station=end_station.get_symbol(),date=date_input,result=result)
     sum_days_current = current_datetime.year * 365 + current_datetime.month * 30 + current_datetime.day
     target_days = start_time.date().year * 365 + start_time.date().month * 30 + start_time.date().day
-    ratio_date = sum_days_current / target_days
-    # print(ratio_date)
+    ratio_date = sum_days_current/target_days
+    #print(ratio_date)
     if ratio_date > 0.6:
         rate = rate + (0.1 * ratio_date)
     total = rate * sum
-    total = round(total, 2)
-    start_stops_at = Stops_at.query.filter(Stops_at.time_in >= start_time.time(), Stops_at.time_in <= end_time.time(),
-                                           Stops_at.station_id == start_station.get_id()).all()
+    total = round(total,2)
+    start_stops_at = Stops_at.query.filter(Stops_at.time_in >= start_time.time(), Stops_at.time_in <= end_time.time(), Stops_at.station_id == start_station.get_id()).all()
     meet_date_list = {}
     for data in start_stops_at:
-        meet_date_train = Seats_free.query.filter_by(train_id=data.get_train_id(),
-                                                     seat_free_date=start_time.date()).all()
+        meet_date_train = Seats_free.query.filter_by(train_id = data.get_train_id(),seat_free_date = start_time.date()).all()
         if len(meet_date_train) != 0:
-            meet_date_list[data.get_train_id()] = Seats_free.query.filter_by(train_id=data.get_train_id(),
-                                                                             segment_id=start_segment.get_id(),
-                                                                             seat_free_date=start_time.date()).all()
-    # print(meet_date_list)
+            meet_date_list[data.get_train_id()] = Seats_free.query.filter_by(train_id = data.get_train_id(),segment_id=start_segment.get_id(),seat_free_date = start_time.date()).all()
+    #print(meet_date_list)
     direction_train_list = []
     for key in meet_date_list:
-        if Trains.query.filter_by(train_id=key, train_direction=train_direction).first() != None:
+        if Trains.query.filter_by(train_id=key,train_direction=train_direction).first() != None:
             direction_train_list.append(key)
-        # print(direction_train_list)
+        #print(direction_train_list)
     information = {}
     train_list_with_seat = []
     seat_number = []
-    for x in range(len(direction_train_list)):
+    for i in range(len(direction_train_list)):
         smaller_seat = 448
         if train_direction == 0:
-            for i in range(difference_id):
-                begin = Segments.query.filter_by(seg_n_end=i + start_station.get_id()).first().get_id()
-                freeseat_no = Seats_free.query.filter_by(train_id=direction_train_list[i], segment_id=begin,
-                                                         seat_free_date=start_time.date()).first().get_freeseat()
+            for x in range(difference_id):
+                begin = Segments.query.filter_by(seg_n_end = x + start_station.get_id()).first().get_id()
+                freeseat_no = Seats_free.query.filter_by(train_id = direction_train_list[i], segment_id = begin,seat_free_date = start_time.date()).first().get_freeseat()
                 if freeseat_no <= smaller_seat:
-                    smaller = freeseat_no
+                    smaller_seat = freeseat_no
             if smaller_seat != 0:
                 seat_number.append(smaller_seat)
                 train_list_with_seat.append(direction_train_list[i])
         else:
             for x in range(difference_id):
-                begin = Segments.query.filter_by(seg_n_end=i + end_station.get_id()).first().get_id()
-                freeseat_no = Seats_free.query.filter_by(train_id=direction_train_list[i], segment_id=begin,
-                                                         seat_free_date=start_time.date()).first().get_freeseat()
+                begin = Segments.query.filter_by(seg_n_end = x + end_station.get_id()).first().get_id()
+                freeseat_no = Seats_free.query.filter_by(train_id = direction_train_list[i], segment_id = begin,seat_free_date = start_time.date()).first().get_freeseat()
                 if freeseat_no <= smaller_seat:
-                    smaller = freeseat_no
+                    smaller_seat = freeseat_no
             if smaller_seat != 0:
                 seat_number.append(smaller_seat)
                 train_list_with_seat.append(direction_train_list[i])
     for i in range(len(train_list_with_seat)):
         information["train_no"] = direction_train_list[i]
         if train_direction == 0:
-            information["depature time"] = Stops_at.query.filter_by(train_id=direction_train_list[i],
-                                                                    station_id=start_station.get_id()).first().get_time_in().strftime(
-                '%H:%M:%S')
-            information["arrival time"] = Stops_at.query.filter_by(train_id=direction_train_list[i],
-                                                                   station_id=end_station.get_id()).first().get_time_out().strftime(
-                '%H:%M:%S')
+            information["depature time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=start_station.get_id()).first().get_time_in().strftime('%H:%M:%S')
+            information["arrival time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=end_station.get_id()).first().get_time_in().strftime('%H:%M:%S')
         else:
-            information["depature time"] = Stops_at.query.filter_by(train_id=direction_train_list[i],
-                                                                    station_id=end_station.get_id()).first().get_time_in().strftime(
-                '%H:%M:%S')
-            information["arrival time"] = Stops_at.query.filter_by(train_id=direction_train_list[i],
-                                                                   station_id=start_station.get_id()).first().get_time_out().strftime(
-                '%H:%M:%S')
+            information["depature time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=end_station.get_id()).first().get_time_in().strftime('%H:%M:%S')
+            information["arrival time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=start_station.get_id()).first().get_time_in().strftime('%H:%M:%S')
         information["price"] = total
         information["seat_number"] = seat_number[i]
         information["fare_type"] = type_input
@@ -170,31 +156,26 @@ def results():
         information["trip_seg_ends"] = end_segment.get_id()
         result.append(information.copy())
     if request.method == "GET":
-        return render_template("results.html", start_station=start_station.get_symbol(),
-                               end_station=end_station.get_symbol(), date=date_input, result=result)
+        return render_template("results.html",start_station=start_station.get_symbol(),end_station=end_station.get_symbol(),date=date_input,result=result)
     elif request.method == "POST":
         passenger = Passengers.query.filter_by(passenger_id=current_user.passenger_id).first()
         for information in result:
-            if request.form.get(str(information["train_no"])) != None:
+            if information["train_no"] == int(request.form.get("select")):
                 selected_information = information
-        # print(selected_information)
-        trip = Trips(trip_date=start_time.date(), trip_seg_start=selected_information["trip_seg_start"],
-                     trip_seg_ends=selected_information["trip_seg_ends"], fare_type=type.get_id(), fare=total,
-                     trip_train_id=selected_information["train_no"])
+        #print(selected_information)
+        trip = Trips(trip_date = start_time.date(), trip_seg_start=selected_information["trip_seg_start"],trip_seg_ends = selected_information["trip_seg_ends"],fare_type = type.get_id(), fare = total, trip_train_id = selected_information["train_no"])
         db.session.add(trip)
         db.session.commit()
         if train_direction == 0:
             for i in range(difference_id):
-                begin = Segments.query.filter_by(seg_n_end=i + start_station.get_id()).first().get_id()
-                update_seat = Seats_free.query.filter_by(train_id=selected_information["train_no"],
-                                                         seat_free_date=start_time.date(), segment_id=begin).first()
+                begin = Segments.query.filter_by(seg_n_end = i + start_station.get_id()).first().get_id()
+                update_seat = Seats_free.query.filter_by(train_id = selected_information["train_no"],seat_free_date = start_time.date(),segment_id = begin).first()
                 update_seat.freeseat = update_seat.get_freeseat() - 1
                 db.session.commit()
         else:
             for i in range(difference_id):
-                begin = Segments.query.filter_by(seg_n_end=i + end_station.get_id()).first().get_id()
-                update_seat = Seats_free.query.filter_by(train_id=selected_information["train_no"],
-                                                         seat_free_date=start_time.date(), segment_id=begin).first()
+                begin = Segments.query.filter_by(seg_n_end = i + end_station.get_id()).first().get_id()
+                update_seat = Seats_free.query.filter_by(train_id = selected_information["train_no"],seat_free_date = start_time.date(),segment_id = begin).first()
                 update_seat.freeseat = update_seat.get_freeseat() - 1
                 db.session.commit()
         return redirect(url_for('checkout', trip_id=trip.trip_id))
