@@ -241,19 +241,23 @@ def confirmation(reservation_id):
     trip = Trips.query.filter_by(reservation_id=reservation_id).first()
 
     start = Segments.query.filter_by(segment_id=trip.trip_seg_start).first()
-    start_station = Station.query.filter_by(station_id=start.seg_n_end).first()
+    # start_station = Station.query.filter_by(station_id=start.seg_n_end).first()
 
     end = Segments.query.filter_by(segment_id=trip.trip_seg_ends).first()
-    end_station = Station.query.filter_by(station_id=end.seg_s_end).first()
+    # end_station = Station.query.filter_by(station_id=end.seg_s_end).first()
 
     trip_id = trip.trip_id
     train_id = trip.trip_train_id
     trip_date = trip.trip_date
 
     if (trip.trip_seg_ends - trip.trip_seg_start) > 0:
+        start_station = Station.query.filter_by(station_id=start.seg_n_end).first()
+        end_station = Station.query.filter_by(station_id=end.seg_s_end).first()
         departure = Stops_at.query.filter_by(train_id=trip.trip_train_id, station_id=start_station.station_id).first()
         arrival = Stops_at.query.filter_by(train_id=trip.trip_train_id, station_id=end_station.station_id).first()
     else:
+        start_station = Station.query.filter_by(station_id=start.seg_s_end).first()
+        end_station = Station.query.filter_by(station_id=end.seg_n_end).first()
         departure = Stops_at.query.filter_by(train_id=trip.trip_train_id, station_id=end_station.station_id).first()
         arrival = Stops_at.query.filter_by(train_id=trip.trip_train_id, station_id=start_station.station_id).first()
 
@@ -288,12 +292,10 @@ def cancel():
                     trip = Trips.query.filter_by(reservation_id=reservation_id).first()
 
                     start = Segments.query.filter_by(segment_id=trip.trip_seg_start).first()
-                    start_station = Station.query.filter_by(station_id=start.seg_n_end).first()
-                    print(start_station)
+
 
                     end = Segments.query.filter_by(segment_id=trip.trip_seg_ends).first()
-                    end_station = Station.query.filter_by(station_id=end.seg_s_end).first()
-                    print(end_station)
+
 
                     # start = Station.query.filter_by(station_id=trip.trip_seg_start).first()
                     # end = Station.query.filter_by(station_id=trip.trip_seg_ends).first()
@@ -306,11 +308,15 @@ def cancel():
                     trip_date = trip.trip_date
 
                     if (trip.trip_seg_ends - trip.trip_seg_start) > 0:
+                        start_station = Station.query.filter_by(station_id=start.seg_n_end).first()
+                        end_station = Station.query.filter_by(station_id=end.seg_s_end).first()
                         departure = Stops_at.query.filter_by(train_id=trip.trip_train_id,
                                                              station_id=start_station.station_id).first()
                         arrival = Stops_at.query.filter_by(train_id=trip.trip_train_id,
                                                            station_id=end_station.station_id).first()
                     else:
+                        start_station = Station.query.filter_by(station_id=start.seg_s_end).first()
+                        end_station = Station.query.filter_by(station_id=end.seg_n_end).first()
                         departure = Stops_at.query.filter_by(train_id=trip.trip_train_id,
                                                              station_id=end_station.station_id).first()
                         arrival = Stops_at.query.filter_by(train_id=trip.trip_train_id,
