@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from . import app, db
 from flask_login import login_manager, current_user, login_user, logout_user, login_required
-from Rail_Road.models import Passengers, Reservations,Fare_types, Station, Segments, Trains, Seats_free, Stops_at, Trips
+from Rail_Road.models import Passengers, Reservations, Fare_types, Station, Segments, Trains, Seats_free, Stops_at, \
+    Trips
 from datetime import datetime, date, time
+from sqlalchemy.sql import exists
+
 
 # This is example for how to make a route for different page
 @app.route('/', methods=['GET', 'POST'])
@@ -22,24 +25,23 @@ def login():
         return render_template("login.html")
 
 
-
 # redirect to results page after search button is clicked at index page
-@app.route('/index',methods=['GET','POST'])
+@app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
     stations = Station.query.all()
 
     if request.method == 'POST':
-        #session['session'] = session
-        #session['date'] = date
-        #session['type'] = type
+        # session['session'] = session
+        # session['date'] = date
+        # session['type'] = type
         return redirect(url_for('results'))
 
     return render_template("index.html", stations=stations)
 
 
 # redirect to checkout page after reserve button is clicked at results page
-@app.route('/results',methods=['GET','POST'])
+@app.route('/results', methods=['GET', 'POST'])
 @login_required
 def results():
     result = []
@@ -176,15 +178,15 @@ def results():
                 update_seat = Seats_free.query.filter_by(train_id = selected_information["train_no"],seat_free_date = start_time.date(),segment_id = begin).first()
                 update_seat.freeseat = update_seat.get_freeseat() - 1
                 db.session.commit()
-        return render_template("checkout.html",passenger=passenger)
-
+        return redirect(url_for('checkout', trip_id=trip.trip_id))
 
 
 # redirect to confirmation page after submit button is clicked at checkout page
-@app.route('/checkout', methods=['GET', 'POST'])
+@app.route('/checkout/<trip_id>', methods=['GET', 'POST'])
 @login_required
-def checkout():
+def checkout(trip_id):
     passenger = Passengers.query.filter_by(passenger_id=current_user.passenger_id).first()
+    trip = Trips.query.filter_by(trip_id=trip_id).first()
     now = datetime.now()
     if request.method == 'POST':
         fname = request.values.get('first_name')
@@ -204,27 +206,154 @@ def checkout():
         db.session.add(reservation)
         db.session.commit()
 
-        flash('Reservation Made!')
-        return render_template("confirmation.html", reservation_id=reservation.reservation_id)
+        trip.reservation_id = reservation.reservation_id
+        db.session.commit()
 
-    return render_template("checkout.html", passenger=passenger)
+        flash('Reservation Made!')
+        return redirect(url_for('confirmation', reservation_id=reservation.reservation_id))
+
+    return render_template("checkout.html", passenger=passenger, trip_id=trip_id)
 
 
 # confirmation page returns the ticket info to user
 @app.route('/confirmation/<reservation_id>')
 @login_required
 def confirmation(reservation_id):
-    #reservation = Reservations.query.filter_by(reservation_id=reservation_id).first
-    return render_template("confirmation.html", reservation_id=reservation_id)
+    trip = Trips.query.filter_by(reservation_id=reservation_id).first()
+    start_station = Station.query.filter_by(station_id=trip.trip_seg_start).first()
+    end_station = Station.query.filter_by(station_id=trip.trip_seg_ends).first()
+    trip_id = trip.trip_id
+    train_id = trip.trip_train_id
+    trip_date = trip.trip_date
+
+    if (trip.trip_seg_ends - trip.trip_seg_start) > 0:
+        departure = Stops_at.query.filter_by(train_id=trip.trip_train_id, station_id=trip.trip_seg_start).first()
+        arrival = Stops_at.query.filter_by(train_id=trip.trip_train_id, station_id=trip.trip_seg_ends).first()
+    else:
+        departure = Stops_at.query.filter_by(train_id=trip.trip_train_id, station_id=trip.trip_seg_ends).first()
+        arrival = Stops_at.query.filter_by(train_id=trip.trip_train_id, station_id=trip.trip_seg_start).first()
+
+    departure_time = departure.time_in
+    arrival_time = arrival.time_out
+
+    fare = trip.fare
+
+    #### TIME IN TIME OUT IN REVERSE DIRECTION ####
+
+    return render_template("confirmation.html", reservation_id=reservation_id, trip_id=trip_id, train_id=train_id,
+                           trip_date=trip_date, departure_time=departure_time, arrival_time=arrival_time,
+                           start_station=start_station, end_station=end_station, fare=fare)
 
 
 # cancel trip
-@app.route('/cancel')
+@app.route('/cancel', methods=['GET', 'POST'])
+@login_required
 def cancel():
+    now = datetime.now()
+
+    if request.method == "POST":
+        if request.form['action'] == "search":
+            reservation_id = request.form.get('inputId')
+
+            check = Reservations.query.filter_by(reservation_id=reservation_id).count()
+
+            if check == 1:
+                reservation = Reservations.query.filter_by(reservation_id=reservation_id).first()
+
+                if reservation.paying_passenger_id != current_user.passenger_id:
+                    flash("Reservation not found")
+                else:
+                    trip = Trips.query.filter_by(reservation_id=reservation_id).first()
+                    start = Station.query.filter_by(station_id=trip.trip_seg_start).first()
+                    end = Station.query.filter_by(station_id=trip.trip_seg_ends).first()
+                    trip_id = trip.trip_id
+                    train_id = trip.trip_train_id
+                    start_station = start.station_symbol
+                    end_station = end.station_symbol
+
+                    trip_date = trip.trip_date
+
+                    if (trip.trip_seg_ends - trip.trip_seg_start) > 0:
+                        departure = Stops_at.query.filter_by(train_id=trip.trip_train_id,
+                                                             station_id=trip.trip_seg_start).first()
+                        arrival = Stops_at.query.filter_by(train_id=trip.trip_train_id,
+                                                           station_id=trip.trip_seg_ends).first()
+                    else:
+                        departure = Stops_at.query.filter_by(train_id=trip.trip_train_id,
+                                                             station_id=trip.trip_seg_ends).first()
+                        arrival = Stops_at.query.filter_by(train_id=trip.trip_train_id,
+                                                           station_id=trip.trip_seg_start).first()
+
+                    departure_time = departure.time_in
+                    arrival_time = arrival.time_out
+
+                    fare = trip.fare
+
+                    session['reservation_id'] = reservation_id
+                    session['trip_id'] = trip_id
+                    session['start'] = start.station_id
+                    session['end'] = end.station_id
+                    session['date'] = trip_date.strftime("%Y-%m-%d")
+                    session['train_id'] = train_id
+
+                    current = now.strftime("%Y-%m-%d")
+
+                    d1 = datetime.strptime(str(trip_date), "%Y-%m-%d")
+                    d2 = datetime.strptime(current, "%Y-%m-%d")
+
+                    limit = abs(d2 - d1).days
+
+                    # print((trip_date.strftime("%Y-%m-%d") - current).days)
+
+                    return render_template("cancel.html", reservation_id=reservation_id, trip_id=trip_id,
+                                           train_id=train_id,
+                                           trip_date=trip_date, departure_time=departure_time,
+                                           arrival_time=arrival_time,
+                                           start_station=start_station, end_station=end_station, fare=fare, limit=limit)
+
+            else:
+                flash("Reservation not found")
+
+        if request.form['action'] == "cancel":
+
+            difference_id = session['end'] - session['start']
+
+            if (session['end'] - session['start']) > 0:
+                for i in range(difference_id + 1):
+                    begin = Segments.query.filter_by(seg_n_end=i + session['start']).first().get_id()
+                    update_seat = Seats_free.query.filter_by(train_id=session['train_id'],
+                                                             seat_free_date=session['date'], segment_id=begin).first()
+                    update_seat.freeseat = update_seat.get_freeseat() + 1
+                    db.session.commit()
+            else:
+                for i in range(abs(difference_id) + 1):
+                    begin = Segments.query.filter_by(seg_n_end=i + session['end']).first().get_id()
+                    update_seat = Seats_free.query.filter_by(train_id=session['train_id'],
+                                                             seat_free_date=session['date'], segment_id=begin).first()
+                    update_seat.freeseat = update_seat.get_freeseat() + 1
+                    db.session.commit()
+
+            reservation = Reservations.query.filter_by(reservation_id=session['reservation_id']).first()
+            trip = Trips.query.filter_by(trip_id=session['trip_id']).first()
+
+            db.session.delete(trip)
+            db.session.commit()
+            db.session.delete(reservation)
+            db.session.commit()
+
+            session.pop('reservation_id', None)
+            session.pop('trip_id', None)
+            session.pop('start', None)
+            session.pop('end', None)
+            session.pop('date', None)
+            session.pop('train_id', None)
+
+            flash("Cancel successfully")
+
+
     return render_template("cancel.html")
 
 
-# ---------------------- REGISTERED PASSENGER ----------------------#
 @app.route('/registration', methods=['GET', 'POST'])
 def registration():
     if request.method == 'POST':
@@ -281,5 +410,6 @@ def history():
 @login_required
 def logout():
     flash("Logout successfully")
+    session.clear()
     logout_user()
     return redirect(url_for('login'))
