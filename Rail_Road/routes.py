@@ -388,6 +388,7 @@ def cancel():
     return render_template("cancel.html", limit=0)
 
 
+
 @app.route('/registration', methods=['GET', 'POST'])
 def registration():
     if request.method == 'POST':
