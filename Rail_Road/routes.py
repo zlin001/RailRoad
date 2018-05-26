@@ -119,8 +119,8 @@ def results():
     for i in range(len(direction_train_list)):
         smaller_seat = 448
         if train_direction == 0:
-            for i in range(difference_id):
-                begin = Segments.query.filter_by(seg_n_end = i + start_station.get_id()).first().get_id()
+            for x in range(difference_id):
+                begin = Segments.query.filter_by(seg_n_end = x + start_station.get_id()).first().get_id()
                 freeseat_no = Seats_free.query.filter_by(train_id = direction_train_list[i], segment_id = begin,seat_free_date = start_time.date()).first().get_freeseat()
                 if freeseat_no <= smaller_seat:
                     smaller = freeseat_no
@@ -128,8 +128,8 @@ def results():
                 seat_number.append(smaller_seat)
                 train_list_with_seat.append(direction_train_list[i])
         else:
-            for i in range(difference_id):
-                begin = Segments.query.filter_by(seg_n_end = i + end_station.get_id()).first().get_id()
+            for x in range(difference_id):
+                begin = Segments.query.filter_by(seg_n_end = x + end_station.get_id()).first().get_id()
                 freeseat_no = Seats_free.query.filter_by(train_id = direction_train_list[i], segment_id = begin,seat_free_date = start_time.date()).first().get_freeseat()
                 if freeseat_no <= smaller_seat:
                     smaller = freeseat_no
@@ -155,7 +155,7 @@ def results():
     elif request.method == "POST":
         passenger = Passengers.query.filter_by(passenger_id=current_user.passenger_id).first()
         for information in result:
-          if information["train_no"] == int(request.form.get("select")):
+          if request.form.get(str(information["train_no"])) != None:
                 selected_information = information
         #print(selected_information)
         trip = Trips(trip_date = start_time.date(), trip_seg_start=selected_information["trip_seg_start"],trip_seg_ends = selected_information["trip_seg_ends"],fare_type = type.get_id(), fare = total, trip_train_id = selected_information["train_no"])
