@@ -79,7 +79,7 @@
                         <td>{{ arrival_time }}</td>
                         <td>{{ fare }}</td>
                         <td>
-                            {% if limit == 0 %}
+                            {% if limit >= -3 %}
                                 <button name="action" value="cancel" class="btn btn-danger btn-sm" type="submit"
                                         disabled>Cancel
                                 </button>
