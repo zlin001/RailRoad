@@ -1,0 +1,9 @@
+Flask
+flask_bootstrap
+flask_sqlalchemy
+sshtunnel
+sqlalchemy
+flask_login
+datetime
+Werkzeug
+PyMySQL
