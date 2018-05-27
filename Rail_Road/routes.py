@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from . import app, db
 from flask_login import login_manager, current_user, login_user, logout_user, login_required
-from Rail_Road.models import Passengers, Reservations,Fare_types, Station, Segments, Trains, Seats_free, Stops_at, Trips
+from Rail_Road.models import Passengers, Reservations, Fare_types, Station, Segments, Trains, Seats_free, Stops_at, \
+    Trips
 from datetime import datetime, date, time
+from sqlalchemy.sql import exists
+
 
 # This is example for how to make a route for different page
 @app.route('/', methods=['GET', 'POST'])
@@ -22,24 +25,20 @@ def login():
         return render_template("login.html")
 
 
-
 # redirect to results page after search button is clicked at index page
-@app.route('/index',methods=['GET','POST'])
+@app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
     stations = Station.query.all()
 
     if request.method == 'POST':
-        #session['session'] = session
-        #session['date'] = date
-        #session['type'] = type
         return redirect(url_for('results'))
 
     return render_template("index.html", stations=stations)
 
 
 # redirect to checkout page after reserve button is clicked at results page
-@app.route('/results',methods=['GET','POST'])
+@app.route('/results', methods=['GET', 'POST'])
 @login_required
 def results():
     result = []
@@ -52,33 +51,33 @@ def results():
     start_station = Station.query.filter_by(station_name=start_station_input).first()
     end_station = Station.query.filter_by(station_name=end_station_input).first()
     sum = 0
-    if start_station == None or end_station == None:
-        return render_template("results.html",start_station=start_station_input,end_station=end_station_input,date=date_input,result=result)
-    if start_station.get_id() == end_station.get_id():
-        return render_template("results.html",start_station=start_station.get_symbol(),end_station=end_station.get_symbol(),date=date_input,result=result)
+    if (start_station == None or end_station == None) or (start_station.get_id() == end_station.get_id()):
+        flash('Please enter valid stations')
+        stations = Station.query.all()
+        return render_template("index.html", stations=stations)
     if start_station.get_id() > end_station.get_id():
         train_direction = 1
-        start_segment = Segments.query.filter_by(seg_s_end = start_station.get_id()).first()
-        end_segment = Segments.query.filter_by(seg_n_end = end_station.get_id()).first()
+        start_segment = Segments.query.filter_by(seg_s_end=start_station.get_id()).first()
+        end_segment = Segments.query.filter_by(seg_n_end=end_station.get_id()).first()
         difference_id = start_station.get_id() - end_station.get_id()
         for i in range(difference_id):
-            sum += Segments.query.filter_by(seg_n_end = i + end_station.get_id()).first().get_seg_fare()
+            sum += Segments.query.filter_by(seg_n_end=i + end_station.get_id()).first().get_seg_fare()
     else:
         train_direction = 0
-        start_segment = Segments.query.filter_by(seg_n_end = start_station.get_id()).first()
-        end_segment = Segments.query.filter_by(seg_s_end = end_station.get_id()).first()
+        start_segment = Segments.query.filter_by(seg_n_end=start_station.get_id()).first()
+        end_segment = Segments.query.filter_by(seg_s_end=end_station.get_id()).first()
         difference_id = end_station.get_id() - start_station.get_id()
         for i in range(difference_id):
-            sum += Segments.query.filter_by(seg_n_end = i + start_station.get_id()).first().get_seg_fare()
+            sum += Segments.query.filter_by(seg_n_end=i + start_station.get_id()).first().get_seg_fare()
     rate = 0
     if pet_input == "pet":
-        type = Fare_types.query.filter_by(fare_name = type_input).first()
-        rate = type.get_rate() + Fare_types.query.filter_by(fare_name = "pets").first().get_rate()
+        type = Fare_types.query.filter_by(fare_name=type_input).first()
+        rate = type.get_rate() + Fare_types.query.filter_by(fare_name="pets").first().get_rate()
     else:
-        type = Fare_types.query.filter_by(fare_name = type_input).first()
+        type = Fare_types.query.filter_by(fare_name=type_input).first()
         rate = type.get_rate()
     # print(rate)
-    #print(sum)
+    # print(sum)
     current_datetime = datetime.now()
     # print(start_segment.get_id())
     # print(end_segment.get_id())
@@ -88,100 +87,125 @@ def results():
     elif session_input == "afternoon":
         start_time = datetime.strptime(date_input + " 12:00:01", "%m/%d/%Y %H:%M:%S")
         end_time = datetime.strptime(date_input + " 17:00:00", "%m/%d/%Y %H:%M:%S")
-    else:
+    elif session_input == "evening":
         start_time = datetime.strptime(date_input + " 17:00:01", "%m/%d/%Y %H:%M:%S")
+        end_time = datetime.strptime(date_input + " 23:59:59", "%m/%d/%Y %H:%M:%S")
+    else:
+        start_time = datetime.strptime(date_input + " 00:00:00", "%m/%d/%Y %H:%M:%S")
         end_time = datetime.strptime(date_input + " 05:59:59", "%m/%d/%Y %H:%M:%S")
     if start_time < current_datetime:
-        return render_template("results.html",start_station=start_station.get_symbol(),end_station=end_station.get_symbol(),date=date_input,result=result)
+        flash('Please enter valid date')
+        stations = Station.query.all()
+        return render_template("index.html", stations=stations)
     sum_days_current = current_datetime.year * 365 + current_datetime.month * 30 + current_datetime.day
     target_days = start_time.date().year * 365 + start_time.date().month * 30 + start_time.date().day
-    ratio_date = sum_days_current/target_days
-    #print(ratio_date)
+    ratio_date = sum_days_current / target_days
+    # print(ratio_date)
     if ratio_date > 0.6:
         rate = rate + (0.1 * ratio_date)
     total = rate * sum
-    total = round(total,2)
-    start_stops_at = Stops_at.query.filter(Stops_at.time_in >= start_time.time(), Stops_at.time_in <= end_time.time(), Stops_at.station_id == start_station.get_id()).all()
+    total = round(total, 2)
+    start_stops_at = Stops_at.query.filter(Stops_at.time_in >= start_time.time(), Stops_at.time_in <= end_time.time(),
+                                           Stops_at.station_id == start_station.get_id()).all()
     meet_date_list = {}
     for data in start_stops_at:
-        meet_date_train = Seats_free.query.filter_by(train_id = data.get_train_id(),seat_free_date = start_time.date()).all()
+        meet_date_train = Seats_free.query.filter_by(train_id=data.get_train_id(),
+                                                     seat_free_date=start_time.date()).all()
         if len(meet_date_train) != 0:
-            meet_date_list[data.get_train_id()] = Seats_free.query.filter_by(train_id = data.get_train_id(),segment_id=start_segment.get_id(),seat_free_date = start_time.date()).all()
-    #print(meet_date_list)
+            meet_date_list[data.get_train_id()] = Seats_free.query.filter_by(train_id=data.get_train_id(),
+                                                                             segment_id=start_segment.get_id(),
+                                                                             seat_free_date=start_time.date()).all()
+    # print(meet_date_list)
     direction_train_list = []
     for key in meet_date_list:
-        if Trains.query.filter_by(train_id=key,train_direction=train_direction).first() != None:
+        if Trains.query.filter_by(train_id=key, train_direction=train_direction).first() != None:
             direction_train_list.append(key)
-        #print(direction_train_list)
+        # print(direction_train_list)
     information = {}
     train_list_with_seat = []
     seat_number = []
     for i in range(len(direction_train_list)):
         smaller_seat = 448
         if train_direction == 0:
-            for i in range(difference_id):
-                begin = Segments.query.filter_by(seg_n_end = i + start_station.get_id()).first().get_id()
-                freeseat_no = Seats_free.query.filter_by(train_id = direction_train_list[i], segment_id = begin,seat_free_date = start_time.date()).first().get_freeseat()
+            for x in range(difference_id):
+                begin = Segments.query.filter_by(seg_n_end=x + start_station.get_id()).first().get_id()
+                freeseat_no = Seats_free.query.filter_by(train_id=direction_train_list[i], segment_id=begin,
+                                                         seat_free_date=start_time.date()).first().get_freeseat()
                 if freeseat_no <= smaller_seat:
-                    smaller = freeseat_no
+                    smaller_seat = freeseat_no
             if smaller_seat != 0:
                 seat_number.append(smaller_seat)
                 train_list_with_seat.append(direction_train_list[i])
         else:
-            for i in range(difference_id):
-                begin = Segments.query.filter_by(seg_n_end = i + end_station.get_id()).first().get_id()
-                freeseat_no = Seats_free.query.filter_by(train_id = direction_train_list[i], segment_id = begin,seat_free_date = start_time.date()).first().get_freeseat()
+            for x in range(difference_id):
+                begin = Segments.query.filter_by(seg_n_end=x + end_station.get_id()).first().get_id()
+                freeseat_no = Seats_free.query.filter_by(train_id=direction_train_list[i], segment_id=begin,
+                                                         seat_free_date=start_time.date()).first().get_freeseat()
                 if freeseat_no <= smaller_seat:
-                    smaller = freeseat_no
+                    smaller_seat = freeseat_no
             if smaller_seat != 0:
                 seat_number.append(smaller_seat)
                 train_list_with_seat.append(direction_train_list[i])
     for i in range(len(train_list_with_seat)):
         information["train_no"] = direction_train_list[i]
         if train_direction == 0:
-            information["depature time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=start_station.get_id()).first().get_time_in().strftime('%H:%M:%S')
-            information["arrival time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=end_station.get_id()).first().get_time_out().strftime('%H:%M:%S')
+            information["depature time"] = Stops_at.query.filter_by(train_id=direction_train_list[i],
+                                                                    station_id=start_station.get_id()).first().get_time_in().strftime(
+                '%H:%M:%S')
+            information["arrival time"] = Stops_at.query.filter_by(train_id=direction_train_list[i],
+                                                                   station_id=end_station.get_id()).first().get_time_in().strftime(
+                '%H:%M:%S')
         else:
-            information["depature time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=end_station.get_id()).first().get_time_in().strftime('%H:%M:%S')
-            information["arrival time"] = Stops_at.query.filter_by(train_id = direction_train_list[i],station_id=start_station.get_id()).first().get_time_out().strftime('%H:%M:%S')
+            information["depature time"] = Stops_at.query.filter_by(train_id=direction_train_list[i],
+                                                                    station_id=end_station.get_id()).first().get_time_in().strftime(
+                '%H:%M:%S')
+            information["arrival time"] = Stops_at.query.filter_by(train_id=direction_train_list[i],
+                                                                   station_id=start_station.get_id()).first().get_time_in().strftime(
+                '%H:%M:%S')
         information["price"] = total
         information["seat_number"] = seat_number[i]
         information["fare_type"] = type_input
         information["trip_seg_start"] = start_segment.get_id()
         information["trip_seg_ends"] = end_segment.get_id()
         result.append(information.copy())
+
     if request.method == "GET":
-        return render_template("results.html",start_station=start_station.get_symbol(),end_station=end_station.get_symbol(),date=date_input,result=result)
+        return render_template("results.html", start_station=start_station.get_symbol(),
+                               end_station=end_station.get_symbol(), date=date_input, result=result)
     elif request.method == "POST":
         passenger = Passengers.query.filter_by(passenger_id=current_user.passenger_id).first()
         for information in result:
-          if information["train_no"] == int(request.form.get("select")):
+            if information["train_no"] == int(request.form.get("select")):
                 selected_information = information
-        #print(selected_information)
-        trip = Trips(trip_date = start_time.date(), trip_seg_start=selected_information["trip_seg_start"],trip_seg_ends = selected_information["trip_seg_ends"],fare_type = type.get_id(), fare = total, trip_train_id = selected_information["train_no"])
+        # print(selected_information)
+        trip = Trips(trip_date=start_time.date(), trip_seg_start=selected_information["trip_seg_start"],
+                     trip_seg_ends=selected_information["trip_seg_ends"], fare_type=type.get_id(), fare=total,
+                     trip_train_id=selected_information["train_no"])
         db.session.add(trip)
         db.session.commit()
         if train_direction == 0:
             for i in range(difference_id):
-                begin = Segments.query.filter_by(seg_n_end = i + start_station.get_id()).first().get_id()
-                update_seat = Seats_free.query.filter_by(train_id = selected_information["train_no"],seat_free_date = start_time.date(),segment_id = begin).first()
+                begin = Segments.query.filter_by(seg_n_end=i + start_station.get_id()).first().get_id()
+                update_seat = Seats_free.query.filter_by(train_id=selected_information["train_no"],
+                                                         seat_free_date=start_time.date(), segment_id=begin).first()
                 update_seat.freeseat = update_seat.get_freeseat() - 1
                 db.session.commit()
         else:
             for i in range(difference_id):
-                begin = Segments.query.filter_by(seg_n_end = i + end_station.get_id()).first().get_id()
-                update_seat = Seats_free.query.filter_by(train_id = selected_information["train_no"],seat_free_date = start_time.date(),segment_id = begin).first()
+                begin = Segments.query.filter_by(seg_n_end=i + end_station.get_id()).first().get_id()
+                update_seat = Seats_free.query.filter_by(train_id=selected_information["train_no"],
+                                                         seat_free_date=start_time.date(), segment_id=begin).first()
                 update_seat.freeseat = update_seat.get_freeseat() - 1
                 db.session.commit()
-        return render_template("checkout.html",passenger=passenger)
-
+        return redirect(url_for('checkout', trip_id=trip.trip_id))
 
 
 # redirect to confirmation page after submit button is clicked at checkout page
-@app.route('/checkout', methods=['GET', 'POST'])
+@app.route('/checkout/<trip_id>', methods=['GET', 'POST'])
 @login_required
-def checkout():
+def checkout(trip_id):
     passenger = Passengers.query.filter_by(passenger_id=current_user.passenger_id).first()
+    trip = Trips.query.filter_by(trip_id=trip_id).first()
     now = datetime.now()
     if request.method == 'POST':
         fname = request.values.get('first_name')
@@ -201,27 +225,176 @@ def checkout():
         db.session.add(reservation)
         db.session.commit()
 
-        flash('Reservation Made!')
-        return render_template("confirmation.html", reservation_id=reservation.reservation_id)
+        trip.reservation_id = reservation.reservation_id
+        db.session.commit()
 
-    return render_template("checkout.html", passenger=passenger)
+        flash('Reservation Made!')
+        return redirect(url_for('confirmation', reservation_id=reservation.reservation_id))
+
+    return render_template("checkout.html", passenger=passenger, trip_id=trip_id)
 
 
 # confirmation page returns the ticket info to user
 @app.route('/confirmation/<reservation_id>')
 @login_required
 def confirmation(reservation_id):
-    #reservation = Reservations.query.filter_by(reservation_id=reservation_id).first
-    return render_template("confirmation.html", reservation_id=reservation_id)
+    trip = Trips.query.filter_by(reservation_id=reservation_id).first()
+
+    start = Segments.query.filter_by(segment_id=trip.trip_seg_start).first()
+    # start_station = Station.query.filter_by(station_id=start.seg_n_end).first()
+
+    end = Segments.query.filter_by(segment_id=trip.trip_seg_ends).first()
+    # end_station = Station.query.filter_by(station_id=end.seg_s_end).first()
+
+    trip_id = trip.trip_id
+    train_id = trip.trip_train_id
+    trip_date = trip.trip_date
+
+    if (trip.trip_seg_ends - trip.trip_seg_start) > 0:
+        start_station = Station.query.filter_by(station_id=start.seg_n_end).first()
+        end_station = Station.query.filter_by(station_id=end.seg_s_end).first()
+        departure = Stops_at.query.filter_by(train_id=trip.trip_train_id, station_id=start_station.station_id).first()
+        arrival = Stops_at.query.filter_by(train_id=trip.trip_train_id, station_id=end_station.station_id).first()
+    else:
+        start_station = Station.query.filter_by(station_id=start.seg_s_end).first()
+        end_station = Station.query.filter_by(station_id=end.seg_n_end).first()
+        departure = Stops_at.query.filter_by(train_id=trip.trip_train_id, station_id=end_station.station_id).first()
+        arrival = Stops_at.query.filter_by(train_id=trip.trip_train_id, station_id=start_station.station_id).first()
+
+    departure_time = departure.time_in
+    arrival_time = arrival.time_in
+
+    fare = trip.fare
+
+    return render_template("confirmation.html", reservation_id=reservation_id, trip_id=trip_id, train_id=train_id,
+                           trip_date=trip_date, departure_time=departure_time, arrival_time=arrival_time,
+                           start_station=start_station, end_station=end_station, fare=fare)
 
 
 # cancel trip
-@app.route('/cancel')
+@app.route('/cancel', methods=['GET', 'POST'])
+@login_required
 def cancel():
-    return render_template("cancel.html")
+    now = datetime.now()
+
+    if request.method == "POST":
+        if request.form['action'] == "search":
+            reservation_id = request.form.get('inputId')
+
+            check = Reservations.query.filter_by(reservation_id=reservation_id).count()
+
+            if check == 1:
+                reservation = Reservations.query.filter_by(reservation_id=reservation_id).first()
+
+                if reservation.paying_passenger_id != current_user.passenger_id:
+                    flash("Reservation not found")
+                else:
+                    trip = Trips.query.filter_by(reservation_id=reservation_id).first()
+
+                    start = Segments.query.filter_by(segment_id=trip.trip_seg_start).first()
 
 
-# ---------------------- REGISTERED PASSENGER ----------------------#
+                    end = Segments.query.filter_by(segment_id=trip.trip_seg_ends).first()
+
+
+                    # start = Station.query.filter_by(station_id=trip.trip_seg_start).first()
+                    # end = Station.query.filter_by(station_id=trip.trip_seg_ends).first()
+                    #
+                    # start_station = start.station_symbol
+                    # end_station = end.station_symbol
+
+                    trip_id = trip.trip_id
+                    train_id = trip.trip_train_id
+                    trip_date = trip.trip_date
+
+                    if (trip.trip_seg_ends - trip.trip_seg_start) > 0:
+                        start_station = Station.query.filter_by(station_id=start.seg_n_end).first()
+                        end_station = Station.query.filter_by(station_id=end.seg_s_end).first()
+                        departure = Stops_at.query.filter_by(train_id=trip.trip_train_id,
+                                                             station_id=start_station.station_id).first()
+                        arrival = Stops_at.query.filter_by(train_id=trip.trip_train_id,
+                                                           station_id=end_station.station_id).first()
+                    else:
+                        start_station = Station.query.filter_by(station_id=start.seg_s_end).first()
+                        end_station = Station.query.filter_by(station_id=end.seg_n_end).first()
+                        departure = Stops_at.query.filter_by(train_id=trip.trip_train_id,
+                                                             station_id=end_station.station_id).first()
+                        arrival = Stops_at.query.filter_by(train_id=trip.trip_train_id,
+                                                           station_id=start_station.station_id).first()
+
+                    departure_time = departure.time_in
+                    arrival_time = arrival.time_in
+
+                    fare = trip.fare
+
+                    session['reservation_id'] = reservation_id
+                    session['trip_id'] = trip_id
+                    session['start'] = start_station.station_id
+                    session['end'] = end_station.station_id
+                    session['date'] = trip_date.strftime("%Y-%m-%d")
+                    session['train_id'] = train_id
+
+                    # print(session['start'])
+                    # print(session['end'])
+
+                    current = now.strftime("%Y-%m-%d")
+
+                    d1 = datetime.strptime(str(trip_date), "%Y-%m-%d")
+                    d2 = datetime.strptime(current, "%Y-%m-%d")
+
+                    limit = (d2 - d1).days
+                    # print(limit)
+
+                    # print((trip_date.strftime("%Y-%m-%d") - current).days)
+
+                    return render_template("cancel.html", reservation_id=reservation_id, trip_id=trip_id,
+                                           train_id=train_id, start_station=start_station.station_symbol,
+                                           end_station=end_station.station_symbol, departure_time=departure_time,
+                                           arrival_time=arrival_time, trip_date=trip_date, fare=fare, limit=limit)
+
+            else:
+                flash("Reservation not found")
+
+        if request.form['action'] == "cancel":
+
+            difference_id = session['end'] - session['start']
+
+            if (session['end'] - session['start']) > 0:
+                for i in range(difference_id):
+                    begin = Segments.query.filter_by(seg_n_end=i + session['start']).first().get_id()
+                    update_seat = Seats_free.query.filter_by(train_id=session['train_id'],
+                                                             seat_free_date=session['date'], segment_id=begin).first()
+                    update_seat.freeseat = update_seat.get_freeseat() + 1
+                    db.session.commit()
+            else:
+                for i in range(abs(difference_id)):
+                    begin = Segments.query.filter_by(seg_n_end=i + session['end']).first().get_id()
+                    update_seat = Seats_free.query.filter_by(train_id=session['train_id'],
+                                                             seat_free_date=session['date'], segment_id=begin).first()
+                    update_seat.freeseat = update_seat.get_freeseat() + 1
+                    db.session.commit()
+
+            reservation = Reservations.query.filter_by(reservation_id=session['reservation_id']).first()
+            trip = Trips.query.filter_by(trip_id=session['trip_id']).first()
+
+            db.session.delete(trip)
+            db.session.commit()
+            db.session.delete(reservation)
+            db.session.commit()
+
+            session.pop('reservation_id', None)
+            session.pop('trip_id', None)
+            session.pop('start', None)
+            session.pop('end', None)
+            session.pop('date', None)
+            session.pop('train_id', None)
+
+            flash("Cancel successfully")
+
+    return render_template("cancel.html", limit=0)
+
+
+
 @app.route('/registration', methods=['GET', 'POST'])
 def registration():
     if request.method == 'POST':
@@ -268,15 +441,10 @@ def profile():
     return render_template("profile.html", passenger=passenger)
 
 
-# shows all tickets that the user has purchase
-@app.route('/history')
-def history():
-    return render_template("history.html")
-
-
 @app.route('/logout')
 @login_required
 def logout():
     flash("Logout successfully")
+    session.clear()
     logout_user()
     return redirect(url_for('login'))

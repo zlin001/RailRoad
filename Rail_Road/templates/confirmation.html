@@ -39,6 +39,7 @@
         <br>
 
         <p style="font-weight: bold; color: red">** Please Remember Your Reservation ID **</p>
+        <p style="font-weight: bold; color: red">** You can cancel your reservation 3 days before your trip **</p>
 
         <div class="table-responsive">
             <table class="table">
@@ -47,23 +48,25 @@
                     <th>Reservation ID</th>
                     <th>Trip ID</th>
                     <th>Train ID</th>
-                    <th>Trip Date</th>
                     <th>Departure Station</th>
                     <th>Arrival Station</th>
-                    <th>Fare Type</th>
+                    <th>Trip Date</th>
+                    <th>Departure Time</th>
+                    <th>Arrival Time</th>
                     <th>Price</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr>
                     <td>{{ reservation_id }}</td>
-                    <td>1</td>
-                    <td>20</td>
-                    <td>5/30/2018 14:30</td>
-                    <td>New York</td>
-                    <td>Boston</td>
-                    <td>Adult</td>
-                    <td>$50</td>
+                    <td>{{ trip_id }}</td>
+                    <td>{{ train_id }}</td>
+                    <td>{{ start_station.station_symbol }}</td>
+                    <td>{{ end_station.station_symbol }}</td>
+                    <td>{{ trip_date }}</td>
+                    <td>{{ departure_time }}</td>
+                    <td>{{ arrival_time }}</td>
+                    <td>{{ fare }}</td>
                 </tr>
                 </tbody>
             </table>

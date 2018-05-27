@@ -41,7 +41,7 @@ class Reservations(db.Model):
     billing_address = db.Column(db.VARCHAR(100))
 
     def __repr__(self):
-        return '<Passenger: {}, {}>'.format(self.reservation_id, self.reservation_date)
+        return '<Reservation: {}, {}>'.format(self.reservation_id, self.reservation_date)
 
 
 class Fare_types(db.Model):
