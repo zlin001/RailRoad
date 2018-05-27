@@ -10,3 +10,5 @@ __init__.pyc
 # virtualenv
 .venv
 venv/
+env/
+lib/
