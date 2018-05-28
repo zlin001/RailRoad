@@ -1,6 +1,9 @@
-runtime: python27
-api_version: 1
-threadsafe: true
+runtime: python
+env: flex
+entrypoint: python application.py
+
+runtime_config:
+    python_version: 3
 
 handlers:
 - url: /Rail_Road/static
